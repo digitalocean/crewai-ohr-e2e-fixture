@@ -4,9 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crewai-ohr-e2e-fixture"
-version = "0.1.0"
-description = "No-LLM conversational Flow fixture for OHR crewai L1 E2E"
-requires-python = ">=3.11"
+version = "0.2.0"
+description = "Real CrewAI conversational Flow fixture for OHR crewai L1 E2E"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  # Floor 1.14.7 — first release with conversational_mixin.handle_turn.
+  # Guest image pins the same major; leave unconstrained upper so the template
+  # crewai install wins when both are present.
+  "crewai>=1.14.7",
+]
 
 [tool.setuptools.packages.find]
 include = ["e2e_flow*"]
