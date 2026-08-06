@@ -1,8 +1,9 @@
 """Two-agent sequential CrewAI Crew for OHR kickoff E2E.
 
-Uses a real LLM (OPENAI_API_KEY + MODEL from the session env). One kickoff
-runs Researcher → Writer in Process.sequential — exactly the OSS Crew path
-the guest mediator drives via `akickoff(inputs=…)`.
+Uses a real LLM from the session env:
+  OPENAI_API_KEY (required)
+  MODEL / OPENAI_MODEL (default gpt-4o)
+  OPENAI_BASE_URL / OPENAI_API_BASE (optional — e.g. DO inference)
 """
 
 from __future__ import annotations
@@ -12,7 +13,20 @@ import os
 from crewai import Agent, Crew, LLM, Process, Task
 
 _model = os.environ.get("MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-4o"
-_llm = LLM(model=_model, api_key=os.environ.get("OPENAI_API_KEY"))
+_base = (
+    os.environ.get("OPENAI_BASE_URL")
+    or os.environ.get("OPENAI_API_BASE")
+    or ""
+).strip()
+
+_llm_kwargs: dict = {
+    "model": _model,
+    "api_key": os.environ.get("OPENAI_API_KEY"),
+}
+if _base:
+    _llm_kwargs["base_url"] = _base
+
+_llm = LLM(**_llm_kwargs)
 
 researcher = Agent(
     role="Researcher",
