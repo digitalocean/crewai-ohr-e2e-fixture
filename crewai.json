@@ -1,3 +1,7 @@
 {
-  "flow": "e2e_flow.flow:E2EFlow"
+  "crew": "e2e_crew.crew:crew",
+  "inputs": {
+    "prompt_key": "topic",
+    "defaults": {}
+  }
 }

@@ -1,11 +1,12 @@
 # crewai-ohr-e2e-fixture
 
-Real **CrewAI** conversational Flow for DigitalOcean OHR `crewai` L1 E2E.
+Real **CrewAI Crew** for DigitalOcean OHR `crewai` L1 kickoff E2E.
 
-- Subclasses `crewai.Flow` with `conversational = True`
-- Returns real `HumanFeedbackPending` for HITL
-- Emits real `crewai_event_bus` events (token / tool frames)
+- Two agents in `Process.sequential`: Researcher → Writer
+- Driven by `Crew.akickoff(inputs={"topic": …})` (mediator default path)
+- Uses `OPENAI_API_KEY` + `MODEL` from the session env (not baked into the repo)
 
-Deterministic (no LLM calls) so the multi-turn + HITL script stays offline-capable.
+Entrypoint: `e2e_crew.crew:crew` (see `crewai.json`).
 
-Entrypoint: `e2e_flow.flow:E2EFlow`
+The older conversational Flow fixture remains under `e2e_flow/` for the
+opt-in `FRAMEWORK_PROVIDER=crewai-flow` path.
