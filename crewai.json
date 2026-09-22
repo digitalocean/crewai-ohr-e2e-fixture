@@ -1,7 +1,3 @@
 {
-  "crew": "e2e_crew.crew:crew",
-  "inputs": {
-    "prompt_key": "topic",
-    "defaults": { "year": "2026" }
-  }
+  "crew": "e2e_crew.crew:crew"
 }
