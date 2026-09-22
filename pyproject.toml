@@ -10,6 +10,10 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
   # Guest image pins crewai; leave a floor so local installs stay usable.
   "crewai>=1.14.7",
+  # Action Gateway integration scenario: wraps the do.actions MCP server
+  # as CrewAI tools (crew.py). Not preinstalled in the guest image, so a
+  # customer wiring their own AG tool in would add this too.
+  "crewai-tools[mcp]>=0.60.0",
 ]
 
 [tool.setuptools.packages.find]
