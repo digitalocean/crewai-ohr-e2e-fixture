@@ -105,7 +105,7 @@ _research_instructions = (
 )
 if _ag_tools:
     _research_instructions += (
-        " Use the web_search tool at least once to find one current, "
+        " Use your web search tool at least once to find one current, "
         "verifiable fact before answering."
     )
 
