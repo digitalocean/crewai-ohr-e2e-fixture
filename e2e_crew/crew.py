@@ -9,10 +9,13 @@ Action Gateway tool wiring (added for the AG integration scenario):
   The platform mints one session-pinned MCP endpoint per declared
   `do.actions` server and ships it to the guest as `HARNESS_MCP_SERVERS`
   (base64 JSON array), a reserved env key customers can't set themselves.
-  CrewAI has no built-in attach hook for this today, so — same as any
-  customer wiring their own agent up to it — we decode the env var
-  ourselves and hand the discovered tools to the Researcher via
-  `crewai_tools.MCPServerAdapter`.
+  This is the raw version of what `harness_crewai.tools.action_gateway_tools()`
+  does (plano), inlined so it runs on the current prod image: decode the env
+  var, list the `do_actions` server's tools with crewai's own MCP client (no
+  crewai-tools), and give each tool the name the server advertises — crewai
+  otherwise prefixes it with the session URL and truncates to 64 chars, which
+  erases the tool name. The manifest must `preload_tools` a tool for the
+  gateway to list it by name.
 """
 
 from __future__ import annotations
@@ -41,12 +44,11 @@ _llm = LLM(**_llm_kwargs)
 
 
 def _load_action_gateway_tools() -> list:
-    """Discover the `do_actions` MCP server (if the manifest declared one
-    under `spec.tools.mcpServers`) and wrap it as CrewAI tools.
+    """Return the `do_actions` MCP server's tools as CrewAI tools.
 
-    Best-effort: any failure here (env absent, package missing, gateway
-    unreachable) just yields no tools rather than failing the whole Crew,
-    matching how a customer would defensively wire an optional tool.
+    Best-effort: any failure here (env absent, gateway unreachable) just
+    yields no tools rather than failing the whole Crew, matching how a
+    customer would defensively wire an optional tool.
     """
     raw = os.environ.get("HARNESS_MCP_SERVERS", "")
     if not raw:
@@ -57,24 +59,23 @@ def _load_action_gateway_tools() -> list:
         print(f"[e2e_crew] HARNESS_MCP_SERVERS decode failed: {exc}")
         return []
 
-    tools: list = []
-    for server in servers:
-        if server.get("name") != "do_actions":
-            continue
-        try:
-            from crewai_tools import MCPServerAdapter
+    url = next((s["url"] for s in servers if s.get("name") == "do_actions"), None)
+    if not url:
+        return []
+    try:
+        from crewai.mcp.config import MCPServerHTTP
+        from crewai.mcp.tool_resolver import MCPToolResolver
+        from crewai.utilities.logger import Logger
 
-            adapter = MCPServerAdapter(
-                {"url": server["url"], "transport": "streamable-http"}
-            )
-            discovered = list(adapter.tools)
-            print(
-                f"[e2e_crew] do_actions MCP tools discovered: "
-                f"{[t.name for t in discovered]}"
-            )
-            tools.extend(discovered)
-        except Exception as exc:  # noqa: BLE001 - defensive, log and continue
-            print(f"[e2e_crew] do_actions MCP tool wiring failed: {exc}")
+        tools = MCPToolResolver(agent=None, logger=Logger()).resolve(
+            [MCPServerHTTP(url=url)]
+        )
+    except Exception as exc:  # noqa: BLE001 - defensive, log and continue
+        print(f"[e2e_crew] do_actions MCP tool listing failed: {exc}")
+        return []
+    for tool in tools:
+        tool.name = tool.original_tool_name
+    print(f"[e2e_crew] do_actions MCP tools: {[t.name for t in tools]}")
     return tools
 
 
