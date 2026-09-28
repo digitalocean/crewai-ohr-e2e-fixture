@@ -100,9 +100,14 @@ writer = Agent(
     verbose=True,
 )
 
+# Every typed kickoff input is referenced here so a run shows what reached
+# the Crew: string {topic}/{audience}, integer {year}/{max_facts}, number
+# {min_confidence}, boolean {include_sources}.
 _research_instructions = (
-    "Research this topic and return exactly 2-3 short bullet facts. "
-    "Topic: {topic}"
+    "Research this topic for an audience of {audience} and return exactly "
+    "{max_facts} short bullet facts that are current as of {year}. Only include "
+    "facts you are at least {min_confidence} confident in. Include sources: "
+    "{include_sources}. Topic: {topic}"
 )
 if _ag_tools:
     _research_instructions += (
@@ -112,16 +117,23 @@ if _ag_tools:
 
 research_task = Task(
     description=_research_instructions,
-    expected_output="2-3 bullet points of key facts (no preamble)",
+    expected_output="{max_facts} bullet points of key facts (no preamble)",
     agent=researcher,
 )
 
 write_task = Task(
     description=(
-        "Using the research, write one short paragraph summarizing the topic. "
-        "End the paragraph with the exact marker CREW_E2E_OK. Topic: {topic}"
+        "First line, copied exactly: INPUTS topic={topic} audience={audience} "
+        "year={year} max_facts={max_facts} min_confidence={min_confidence} "
+        "include_sources={include_sources}\n"
+        "Then, using the research, write one short paragraph summarizing the "
+        "topic for {audience}. End the paragraph with the exact marker "
+        "CREW_E2E_OK. Topic: {topic}"
     ),
-    expected_output="One short paragraph ending with CREW_E2E_OK",
+    expected_output=(
+        "The INPUTS line exactly as given, then one short paragraph ending "
+        "with CREW_E2E_OK"
+    ),
     agent=writer,
     context=[research_task],
 )

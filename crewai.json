@@ -2,6 +2,12 @@
   "crew": "e2e_crew.crew:crew",
   "inputs": {
     "prompt_key": "topic",
-    "defaults": { "year": "2026" }
+    "defaults": {
+      "year": 2026,
+      "audience": "engineers",
+      "max_facts": 3,
+      "min_confidence": 0.8,
+      "include_sources": true
+    }
   }
 }
